@@ -13,30 +13,34 @@ from chromosome import *
 
 # %%
 
-'''No need for this
-beacause the course will be unique
-'''
-# def one_exam_in_one_slot(chromosome):
-#     '''
-#     One course exam should be in a slot
-#     And after that slot or before that slot there should
-#     be no exam of the course
-#     '''
 
-#     chromosome = Chromosome
+def one_exam_in_one_slot(chromosome):
+    '''
+    One course exam should be in a slot
+    And after that slot or before that slot there should
+    be no exam of the course
+    More means bad
+    '''
 
-#     courses = chromosome.get_courses()
-#     slots = chromosome.get_slots()
+    courses = chromosome.get_courses()
+    slots = chromosome.get_slots()
 
-#     slotcourse = [(slot, course) for slot, course in zip(slots, courses)]
+    courseslot = np.array([[course, slot]
+                           for slot, course in zip(slots, courses)])
 
-#     # unique slot room and there counts
-#     _, counts = np.unique(slotcourse, axis=0, return_counts=True)
+    # sorting
+    courseslot = courseslot[courseslot[:, 0].argsort()]
 
-#     # counting of duplicate exams in one slot and one room
-#     dups = sum(counts)-len(counts)
+    course_slots = np.split(courseslot[:, 1], np.unique(
+        courseslot[:, 0], return_index=True)[1][1:])
 
-#     return dups
+    # now in course_slots. Course has list of slots in front of we
+    # in our case it should be not longer than 1
+    # counter the conflicts in which the slots are more than 1
+
+    lst = [len(slots) for slots in course_slots]
+
+    return sum(lst)-len(lst)
 
 
 def one_room_have_one_exam(chromosome):
@@ -68,28 +72,28 @@ def student_one_exam_at_a_time(chromosome):
     '''
     At a given time, student can only give one exam
 
+    In this I'll be also checking the duplication of student in the room
+    and also in the course. Remeber the course can have multiple rooms within one slot.
+    So in short I'll be looking for the same student in the same slot at multiple places
+
     Counting the conflics, more means bad
     '''
 
-    # # Note: Also test the current gene from which the student is selected, because the same student might be repeated in a single class
-    # score = 0
-    # i = j = 0
+    dupstudents = 0  # duplicates of students in more than one slots
+    dupexam = 0  # multiple exam of students at a time
 
-    # while i < len(chromosome.genes):
-    #     for student in chromosome.genes[i].students:
-    #         for genes in chromosome:
-    #             if genes == chromosome.genes[i]:
-    #                 continue
-    #             if genes.start_time == chromosome.genes[i].start_time and genes.day == chromosome.genes[i].day:
-    #                 if student in genes.students:
-    #                     # print('Student in multiple exam')
-    #                     continue
-    #                 else:
-    #                     score += 10
-    #     i += 1
+    for i in range(len(chromosome.genes)):
+        for student in chromosome.genes[i].students:
+            for gene in chromosome:
+                if gene == chromosome.genes[i] != gene.slot == chromosome.genes[i].slot:
+                    if student in gene.students:  # multiple exam
+                        dupexam += 1
 
-    # return score
-    return 0
+        # counting duplicates of student in the same room
+        dupstudents += len(chromosome.genes[i].students) - \
+            len(set(chromosome.genes[i].students))
+
+    return dupstudents+dupexam
 
 
 def one_exam_per_course(chromosome):
@@ -168,6 +172,19 @@ def room_cap_enough_for_students(chromosome):
 HARD_CONSTRAINTS = [
     {
         '''
+        One course exam should be in a slot
+        And after that slot or before that slot there should
+        be no exam of the course
+        '''
+        "name": "One course exam should be in a slot",
+        "function": one_exam_in_one_slot,
+        "weight": 1,
+        "fields": [
+            "rooms"
+        ]
+    },
+    {
+        '''
         rooms to course. The relation is 'n to 1'
         A course can be in many rooms
         But a room can only have one Course
@@ -218,13 +235,17 @@ HARD_CONSTRAINTS = [
         "function": room_cap_enough_for_students,
         "weight": 1,
         "fields": [
-            "rooms"
+            "students"
+            # "rooms" XXX because if we keep changing room and students are 10000 than we
+            # will be stuck in infinit loop
         ]
     }
 ]
 
 # %% [markdown]
 # ### Soft Constrains
+
+
 # %% [markdown]
 # ## Fitness
 
@@ -237,13 +258,17 @@ def cal_fitness(chromosome):
 
     # Checking Hard Constraints
     for constraint in HARD_CONSTRAINTS:
-        constraints_score += constraint['function'](
-            chromosome)*constraint['weight']
-        # if constraints_score < 1000:
-        #     if constraint["fields"] not in mutate_fields:
-        #         mutate_fields += constraint["fields"]
+        score = constraint['function'](chromosome)*constraint['weight']
+        constraints_score += score
+        if score > 10:
+            # threshold setting
+            # score > 10 means bad score
+            if constraint["fields"] not in mutate_fields:
+                mutate_fields += constraint["fields"]
 
     # Assigning the calculated fitness to the chromosome
-    chromosome.fitnessval = constraints_score
+    # range is 0-1. 0 beign the lowest and 1 means the perfect
+    actualfitness = 1 / ((1.0*constraints_score+1))
+    chromosome.fitnessval = actualfitness
 
-    return constraints_score, mutate_fields
+    return actualfitness, mutate_fields

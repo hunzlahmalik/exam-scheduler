@@ -7,7 +7,7 @@
 #
 # In other words, you can say this is our representation of the genes.
 #
-# Gene=(course, students, rooms, slot)
+# Gene=(course, students, room, slot)
 
 # %%
 import data
@@ -29,7 +29,7 @@ class Gene:
         if students is None:
             students = self.get_rand_students(course)
         if room is None:
-            room = self.get_rand_rooms()
+            room = self.get_rand_room()
         if slot is None:
             slot = self.get_rand_slot()
 
@@ -43,9 +43,19 @@ class Gene:
         return (
             "Gene[" +
             "course="+str(self.course)+", " +
-            "rooms="+str(self.room)+", " +
+            "room="+str(self.room)+", " +
             "slot="+str(self.slot)+", " +
             "students="+str(self.students) +
+            "]"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            "Gene[" +
+            "course="+str(self.course)+", " +
+            "room="+str(self.room)+", " +
+            "slot="+str(self.slot)+", " +
+            "students="+str(len(self.students)) +
             "]"
         )
 
@@ -53,7 +63,7 @@ class Gene:
     def get_students(self):
         return self.students
 
-    def get_rand_rooms(self):
+    def get_rand_room(self):
         return data.get_room(rnd.randint(0, data.totalrooms(data.rooms)-1), data.rooms)
         # totalrooms = data.totalrooms(data.rooms)
         # return [data.get_room(rnd.randint(0, totalrooms-1), data.rooms) for _ in range(rnd.randint(1, totalrooms-1))]

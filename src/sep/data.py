@@ -10,10 +10,13 @@ import numpy as np
 # %%
 
 
-def init_data():
-    capfile = "../db/Capacity.csv"
-    dayslotfile = "../db/DaysSlots.csv"
-    regsfile = "../db/R_Data.csv"
+def init_data(capfile=None, dayslotfile=None, regsfile=None):
+    if capfile is None:
+        capfile = "../db/Capacity.csv"
+    if dayslotfile is None:
+        dayslotfile = "../db/DaysSlots.csv"
+    if regsfile is None:
+        regsfile = "../db/R_Data.csv"
 
     #  importing ROOMS CAPACITY
     global rooms
@@ -83,7 +86,7 @@ def get_course_students(courseid, registrationdf):
 
 
 def get_student_courses(studentid, registrationdf):
-    lst= registrationdf.loc[studentid]
+    lst = registrationdf.loc[studentid]
     lst = lst.to_frame()
     return lst[lst[studentid] == True].index.to_numpy(dtype=np.int64)
 

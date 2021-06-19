@@ -8,10 +8,12 @@ import numpy as np
 
 # %%
 class Chromosome:
-    def __init__(self, genes=None, fitnessval=None):
+    def __init__(self, genes=None, fitnessval=None, rng=None):
         # filling random values if None
+        if rng is None:
+            rng = rnd.randint(30, 50)
         if genes is None:
-            genes = [Gene() for _ in range(0, rnd.randint(30, 50))]
+            genes = [Gene() for _ in range(0, rng)]
         if fitnessval is None:
             fitnessval = 0
 
@@ -30,6 +32,9 @@ class Chromosome:
             "Fitness="+str(self.fitnessval) +
             "]"
         )
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
     # Courses of every gene
     def get_courses(self):

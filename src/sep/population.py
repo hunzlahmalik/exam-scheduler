@@ -5,21 +5,24 @@ import numpy as np
 from numpy.core.fromnumeric import choose
 from chromosome import Chromosome
 
-# %%
-population_size = 10
-
 
 # %%
 class Population:
-    def __init__(self, chromosomes=None) -> None:
+    def __init__(self, chromosomes=None, rng=None) -> None:
         # filling random values if None
+        if rng is None:
+            rng = 10
         if chromosomes is None:
-            chromosomes = [Chromosome() for _ in range(1, population_size)]
+            chromosomes = [Chromosome() for _ in range(1, rng)]
 
         self.chromosomes = np.array(chromosomes)
 
-    # for population indexing
+    def __str__(self) -> str:
+        return (
+            self.chromosomes.__str__()
+        )
 
+    # for population indexing
     def __getitem__(self, index):
         return self.chromosomes[index]
 
